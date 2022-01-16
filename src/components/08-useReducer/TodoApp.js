@@ -1,21 +1,44 @@
-import React, { useReducer } from 'react'
+import React, { useEffect, useReducer } from 'react'
+import { useForm } from '../../hooks/useForm'
+import { TodoList } from './List/TodoList'
 import './styles.css'
 import { todoReducer } from './todoReducer'
 
-const initialState = [{
-    id: new Date().getTime(),
-    desc: 'Aprender React',
-    done: false
-}]
+const init = () => {
+    return JSON.parse(localStorage.getItem('todos')) || []
+}
 
 export const TodoApp = () => {
-    const [todos, dispatch] = useReducer(todoReducer, initialState)
-    
+    const [todos, dispatch] = useReducer(todoReducer, [], init)
+    const [ {description} , handleInputChange, reset] = useForm({description: ''})
+
+    useEffect(() => {
+        localStorage.setItem('todos', JSON.stringify(todos))
+    }, [todos])
+
+    const handleDelete = todoId => {
+        const action = {
+            type: 'delete',
+            payload: todoId
+        }
+        dispatch(action)
+    }
+
+    const handleToggle = todoId => {
+        dispatch({
+            type: 'toggle',
+            payload: todoId
+        })
+    }
+
     const handleSubmit = e => {
         e.preventDefault()
+
+        if(description.trim().length <= 1) return
+
         const newTodo = {
             id: new Date().getTime(),
-            desc: 'Nueva tarea',
+            desc: description,
             done: false
         }
 
@@ -25,6 +48,7 @@ export const TodoApp = () => {
         }
 
         dispatch(action)
+        reset()
     }
 
     return (
@@ -32,25 +56,11 @@ export const TodoApp = () => {
             <h1>TodoApp: ({todos.length})</h1>
             <hr />
             <div className='row'>
-                <div className='col-7'>
-                    <ul className='list-group list-group-flush'>
-                        {
-                            todos.map( (todo, i) => (
-                                <li 
-                                    key={todo.id}
-                                    className='list-group-item'
-                                >
-                                    <p className='text-center'>{i + 1}. {todo.desc}</p>
-                                    <button
-                                        className='btn btn-danger'
-                                    >
-                                        Borrar
-                                    </button>
-                                </li>
-                            ))
-                        }
-                    </ul>
-                </div>
+                <TodoList 
+                    todos={todos}
+                    handleDelete={handleDelete}
+                    handleToggle={handleToggle}
+                />
                 <div className='col-5'>
                     <h4>Agregar TODO</h4>
                     <hr />
@@ -64,6 +74,8 @@ export const TodoApp = () => {
                             className='form-control'
                             placeholder='Descripción'
                             autoComplete='off'
+                            value={description}
+                            onChange={handleInputChange}
                         />
                         <button 
                             type='submit'
