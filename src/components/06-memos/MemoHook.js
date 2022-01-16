@@ -8,6 +8,7 @@ export const MemoHook = () => {
     const [show, setShow] = useState(false)
     const memoProcesoPesado = useMemo(() => procesoPesado(counter), [counter])
 
+    
     return (
         <div>
             <h1>MemoHook</h1>
